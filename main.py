@@ -146,7 +146,7 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+        progress_bar(batch_idx, len(trainloader), 'train Loss: %.3f | train Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 
@@ -167,7 +167,7 @@ def test(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(testloader), 'test Loss: %.3f | test Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     # Save checkpoint.
@@ -185,12 +185,11 @@ def test(epoch):
         best_acc = acc
 
 def generate_predictions(model, test_loader):
-    # device = get_default_device()  
     model.eval()  
     predictions = []
     with torch.no_grad():
         for batch in test_loader:
-            images, _ = batch  # Ignore the second element (image_ids)
+            images, _ = batch 
             images = images.to(device)
             outputs = model(images)
             _, preds = torch.max(outputs, dim=1)
@@ -201,7 +200,6 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df = pd.DataFrame({"ID": test_ids, "Labels": predictions})
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
-
 
 for epoch in range(start_epoch, start_epoch+10):
     train(epoch)
