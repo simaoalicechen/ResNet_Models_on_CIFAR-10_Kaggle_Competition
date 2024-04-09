@@ -62,32 +62,34 @@ for i in range(1, 6):
     all_labels.append(batch_labels)
     train_images_tensor = torch.Tensor(np.concatenate(all_images, axis=0)).to(device)
     train_labels_tensor = torch.Tensor(np.concatenate(all_labels, axis=0)).to(torch.long).to(device)
-
+print("all_images", len(all_images))
+print("all_labels", len(all_labels))
+print("train_images_tensor", len(train_images_tensor ))
+print("train_labels_tensor", len(train_labels_tensor))
 # Getting test data here: 
 all_test_images = []
 all_test_labels = []
 batch_dict = test_unpickle('cifar_test_nolabels.pkl')
-batch_images = batch_dict[b'data'].reshape((10000, 3, 32, 32)).transpose(0, 1, 2, 3)
-batch_labels = batch_dict[b'ids']
-all_test_images.append(batch_images)
-all_test_labels.append(batch_labels)
+batch_test_images = batch_dict[b'data'].reshape((10000, 3, 32, 32)).transpose(0, 1, 2, 3)
+batch_test_labels = batch_dict[b'ids']
+all_test_images.append(batch_test_images)
+all_test_labels.append(batch_test_labels)
 test_images_tensor = torch.Tensor(np.concatenate(all_test_images, axis=0)).to(device)
 test_labels_tensor = torch.Tensor(np.concatenate(all_test_labels, axis=0)).to(torch.long).to(device)
-print(len(all_test_images))
-print(len(all_test_labels))
-print(len(test_images_tensor))
-print(len(test_labels_tensor))
+print("all test images", len(all_test_images))
+print("all test labels", len(all_test_labels))
+print("test image tensor", len(test_images_tensor))
+print("test images tensor", len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
 batch_size = 128
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
+print("train loader length: ", len(trainloader))
 # Testing dataset
-test_data, test_labels = load_dataset("test", augment = False)
 test_dataset = CustomTensorDataset(tensors=(test_images_tensor, test_labels_tensor), transform = get_transform("test"))
 batch_size = 400
 testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-print(len(testloader))
+print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -100,15 +102,13 @@ if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
-# import os
+checkpoint_dir = './checkpoint/'
+os.makedirs(checkpoint_dir, exist_ok=True)
 
-# checkpoint_dir = './checkpoint/'
-# os.makedirs(checkpoint_dir, exist_ok=True)
+summary(net, input_size = (400, 3, 32, 32))
+print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-# summary(net, input_size = (400, 3, 32, 32))
-# print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
-
-# checkpoint_path = './checkpoint/ckpt.pth'
+checkpoint_path = './checkpoint/ckpt.pth'
 
 if os.path.exists(checkpoint_path):
     try:
