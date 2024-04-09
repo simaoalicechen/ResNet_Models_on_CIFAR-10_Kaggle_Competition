@@ -9,16 +9,14 @@ from torchinfo import summary
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
-from sklearn.model_selection import train_test_split
-from models.resnet import ResNet18, ResNet5M
+# from sklearn.model_selection import train_test_split
+from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
 import pickle
 from models import *
-from utils import progress_bar
-
-import torch
+from utils import progress_bar, plot_accuracies, plot_losses, plot_lrs
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -40,12 +38,13 @@ transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
 transform_test = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
 # Getting training and validating data: 
@@ -82,12 +81,12 @@ print("test image tensor", len(test_images_tensor))
 print("test images tensor", len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size = 400
+batch_size =  32
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 print("train loader length: ", len(trainloader))
 # Testing dataset
 test_dataset = CustomTensorDataset(tensors=(test_images_tensor, test_labels_tensor), transform = get_transform("test"))
-batch_size = 400
+batch_size =  64
 testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
@@ -96,7 +95,8 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')      
-net = ResNet5M()
+# net = ResNet5M()
+net = ResNet5MWithAttention()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -108,20 +108,22 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt.pth'
+checkpoint_path = './checkpoint/ckpt_epoch30.pth'
 
 if os.path.exists(checkpoint_path):
     try:
         checkpoint = torch.load(checkpoint_path)
         net.load_state_dict(checkpoint['net'])
-        best_acc = checkpoint['acc']
-        start_epoch = checkpoint['epoch']
+        best_acc = checkpoint['best_acc']
+        start_epoch = checkpoint['epoch'] + 1
+        # test_predictions = checkpoint["checkpoint"]
         print('==> Resuming from checkpoint..')
     except FileNotFoundError:
         print(f"Checkpoint file '{checkpoint_path}' not found. Starting from scratch.")
 else:
     print(f"Checkpoint file '{checkpoint_path}' not found. Starting from scratch.")
-
+print(start_epoch)
+print("best_acc", best_acc)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
@@ -150,6 +152,16 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'train Loss: %.3f | train Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    # Save training checkpoint after each epoch
+    if not os.path.isdir('checkpoint'):
+        os.mkdir('checkpoint')
+    torch.save({
+        'epoch': epoch,
+        'net': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
+        'best_acc': best_acc,
+    }, './checkpoint/ckpt_epoch{}.pth'.format(epoch))
 
 
 def test(epoch):
@@ -160,12 +172,39 @@ def test(epoch):
     total = 0
 
     with torch.no_grad():
-        for batch in testloader:
-            images, image_ids = batchimages, image_ids = images.to(device), image_dis.to(device)
+        for batch in test_loader:
+            images, _ = batch 
+            images = images.to(device)
             outputs = net(images)
-            _, predicted = outputs.max(1)
+            _, preds = torch.max(outputs, dim=1)
             predictions.extend(preds.cpu().numpy())  
+        # for batch in testloader:
+        #     images, image_ids = batch[0].to(device), batch[1].to(device)
+            # batchimages, image_ids = images.to(device), image_dis.to(device)
+            # outputs = net(images)
+            # _, predicted = outputs.max(1)
+            # predicted.extend(preds.cpu().numpy())  
             return predictions
+        # Save checkpoint.
+    # acc = 100.*correct/total
+    # if acc > best_acc:
+    #     print('Saving..')
+    #     state = {
+    #         'net': net.state_dict(),
+    #         'acc': acc,
+    #         'epoch': epoch,
+    #     }
+    # Save test checkpoint after each epoch
+    if not os.path.isdir('checkpoint'):
+        os.mkdir('checkpoint')
+    torch.save({
+        'epoch': epoch,
+        'net': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
+        'best_acc': best_acc,
+        "test_predictions": predictions, 
+    }, './checkpoint/test_ckpt_epoch{}.pth'.format(epoch))
            
 def generate_predictions(model, test_loader):
     model.eval()  
@@ -184,8 +223,15 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
-for epoch in range(start_epoch, start_epoch+210):
-    print(epoch)
+# checkpoint = torch.load("checkpoint")
+# net.load_state_dict(checkpoint['net'])
+# optimizer.load_state_dict(checkpoint['optimizer'])
+# scheduler.load_state_dict(checkpoint['scheduler'])
+# best_acc = checkpoint['best_acc']
+# start_epoch = checkpoint['epoch'] + 1 
+
+for epoch in range(start_epoch, start_epoch+280):
+    # print(epoch)
     train(epoch)
     # test(epoch)
     scheduler.step()
@@ -201,14 +247,44 @@ for epoch in range(start_epoch, start_epoch+210):
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
         print("over")
+    if epoch == 159:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions159.csv")
+        print("over")
+    if epoch == 179:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
+        print("over")
     if epoch == 189:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
+        print("over")
+    if epoch == 199:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
         print("over")
     if epoch == 209:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions209.csv")
         print("over")
+    if epoch == 229:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions229.csv")
+        print("over")
+    if epoch == 249:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions249.csv")
+        print("over")
+    if epoch == 269:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions269.csv")
+        print("over")
+    if epoch == 279:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions279.csv")
+        print("over")
+
+plot_accuracies()
 
 # if __name__ == "__main__":
 #     net = ResNet5M()
