@@ -128,7 +128,7 @@ def plot_accuracies(history):
     plt.close()
 
 def plot_losses(history):
-    train_losses = [x.get('train_loss') for x in history]
+    train_losses = [x.get('train_loss') for x in checkpoint]
     val_losses = [x['val_loss'] for x in history]
     plt.plot(train_losses, '-bx')
     plt.plot(val_losses, '-rx')

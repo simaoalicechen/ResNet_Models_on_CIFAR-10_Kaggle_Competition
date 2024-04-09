@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -104,18 +103,16 @@ class SelfAttention(nn.Module):
         self.gamma = nn.Parameter(torch.zeros(1))
 
     def forward(self, x):
-        # Get the size of the input tensor
         m_batchsize, C, width, height = x.size()
-        # Project features to query, key, and value
-        proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1) # B x (N) x C
-        proj_key = self.key_conv(x).view(m_batchsize, -1, width*height) # B x C x (N)
-        energy = torch.bmm(proj_query, proj_key) # batch matrix-matrix product
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1) 
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width*height) 
+        energy = torch.bmm(proj_query, proj_key) 
 
-        attention = F.softmax(energy, dim=-1) # Normalize the attention scores
-        proj_value = self.value_conv(x).view(m_batchsize, -1, width*height) # B x C x N
+        attention = F.softmax(energy, dim=-1) 
+        proj_value = self.value_conv(x).view(m_batchsize, -1, width*height)
 
-        out = torch.bmm(proj_value, attention.permute(0, 2, 1)) # batch matrix-matrix product
-        out = out.view(m_batchsize, C, width, height) # Reshape the output tensor
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1)) 
+        out = out.view(m_batchsize, C, width, height) 
         out = self.gamma * out + x
         return out
 
@@ -185,6 +182,10 @@ def ResNet5MWithAttention():
 
 def ResNet5M():
     return ResNet(BasicBlock, [2, 2, 2, 2])
+
+
+def ResNetSimple():
+    return ResNetSimple(SimpleBlock)
 
 def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])

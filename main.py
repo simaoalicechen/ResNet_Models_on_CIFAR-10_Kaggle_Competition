@@ -3,14 +3,14 @@ import numpy as np
 import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
+from torch.optim.lr_scheduler import LambdaLR
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 from torchinfo import summary
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
-# from sklearn.model_selection import train_test_split
-from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention
+from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention, ResNetSimple
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
@@ -38,13 +38,14 @@ transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
 transform_test = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 # Getting training and validating data: 
@@ -86,12 +87,20 @@ trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 print("train loader length: ", len(trainloader))
 # Testing dataset
 test_dataset = CustomTensorDataset(tensors=(test_images_tensor, test_labels_tensor), transform = get_transform("test"))
-batch_size =  64
+batch_size =  100
 testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
+# Batch size change in different epochs:
+# 1-30: 16
+# 30-40: 32
+# 40: 64
+# 62: 128
+# 72: 400
+# 116: 128
+# 120: 400
 
 # Model
 print('==> Building model..')      
@@ -108,12 +117,13 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt_epoch115.pth'
+checkpoint_path = './checkpoint/ckpt_epoch.pth'
 
 if os.path.exists(checkpoint_path):
     try:
         checkpoint = torch.load(checkpoint_path)
         net.load_state_dict(checkpoint['net'])
+
         best_acc = checkpoint['best_acc']
         start_epoch = checkpoint['epoch'] + 1
         # test_predictions = checkpoint["checkpoint"]
@@ -125,10 +135,20 @@ else:
 print(start_epoch)
 print("best_acc", best_acc)
 
+
+initial_lr = 0.01
+final_lr = 0.001
+total_epochs = 200
+def lr_lambda(epoch):
+    return 1 - (epoch / total_epochs)
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr,
+optimizer = optim.SGD(net.parameters(), 
+                        # lr=args.lr,
+                        lr=initial_lr,
                       momentum=0.9, weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = LambdaLR(optimizer, lr_lambda)
 
 # Training
 def train(epoch):
@@ -230,7 +250,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
 # best_acc = checkpoint['best_acc']
 # start_epoch = checkpoint['epoch'] + 1 
 
-for epoch in range(start_epoch, start_epoch+280):
+for epoch in range(start_epoch, start_epoch+300):
     # print(epoch)
     train(epoch)
     # test(epoch)
@@ -253,7 +273,7 @@ for epoch in range(start_epoch, start_epoch+280):
         print("over")
     if epoch == 179:
         predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions179.csv")
         print("over")
     if epoch == 189:
         predictions = generate_predictions(net, testloader)
@@ -283,7 +303,30 @@ for epoch in range(start_epoch, start_epoch+280):
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions279.csv")
         print("over")
-
+    if epoch == 299:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions299.csv")
+        print("over")
+    if epoch == 325:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions325.csv")
+        print("over")
+    if epoch == 350:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions350.csv")
+        print("over")
+    if epoch == 375:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions375.csv")
+        print("over")
+    if epoch == 400:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions400.csv")
+        print("over")
+    if epoch == 463:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions463.csv")
+        print("over")
 plot_accuracies()
 
 # if __name__ == "__main__":
