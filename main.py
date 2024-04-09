@@ -49,6 +49,8 @@ transform_test = transforms.Compose([
 # 1-30: 15
 # 30-40: 32
 # 40: 64
+# 66: 128
+# 72: 400
 
 # Getting training and validating data: 
 cifar10_dir = 'data/cifar-10-batches-py'
@@ -84,7 +86,7 @@ print("test image tensor", len(test_images_tensor))
 print("test images tensor", len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size =  128
+batch_size =  400
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 print("train loader length: ", len(trainloader))
 # Testing dataset
@@ -98,8 +100,8 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')      
-net = ResNet5M()
-# net = ResNet5MWithAttention()
+# net = ResNet5M()
+net = ResNet5MWithAttention()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -111,7 +113,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt_epoch42.pth'
+checkpoint_path = './checkpoint/ckpt_epoch155.pth'
 
 if os.path.exists(checkpoint_path):
     try:
