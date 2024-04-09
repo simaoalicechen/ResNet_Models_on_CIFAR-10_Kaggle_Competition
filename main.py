@@ -62,8 +62,6 @@ for i in range(1, 6):
     all_labels.append(batch_labels)
     train_images_tensor = torch.Tensor(np.concatenate(all_images, axis=0)).to(device)
     train_labels_tensor = torch.Tensor(np.concatenate(all_labels, axis=0)).to(torch.long).to(device)
-    # train_dataset = TensorDataset(train_images_tensor, train_labels_tensor)
-    # X_train, X_valid, y_train, y_valid = train_test_split(train_images_tensor, train_labels_tensor, test_size=0.2, random_state=42)
 
 # Getting test data here: 
 all_test_images = []
@@ -72,23 +70,27 @@ batch_dict = test_unpickle('cifar_test_nolabels.pkl')
 batch_images = batch_dict[b'data'].reshape((10000, 3, 32, 32)).transpose(0, 1, 2, 3)
 batch_labels = batch_dict[b'ids']
 all_test_images.append(batch_images)
-all_test_images.append(batch_labels)
-test_images_tensor = torch.Tensor(np.concatenate(all_images, axis=0)).to(device)
-test_labels_tensor = torch.Tensor(np.concatenate(all_labels, axis=0)).to(torch.long).to(device)
-
+all_test_labels.append(batch_labels)
+test_images_tensor = torch.Tensor(np.concatenate(all_test_images, axis=0)).to(device)
+test_labels_tensor = torch.Tensor(np.concatenate(all_test_labels, axis=0)).to(torch.long).to(device)
+print(len(all_test_images))
+print(len(all_test_labels))
+print(len(test_images_tensor))
+print(len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
 batch_size = 128
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 # Testing dataset
-# test_data, test_labels = load_dataset("test", augment = False)
+test_data, test_labels = load_dataset("test", augment = False)
 test_dataset = CustomTensorDataset(tensors=(test_images_tensor, test_labels_tensor), transform = get_transform("test"))
 batch_size = 400
 testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
+print(len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
+
 
 # Model
 print('==> Building model..')      
@@ -98,15 +100,15 @@ if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
-import os
+# import os
 
-checkpoint_dir = './checkpoint/'
-os.makedirs(checkpoint_dir, exist_ok=True)
+# checkpoint_dir = './checkpoint/'
+# os.makedirs(checkpoint_dir, exist_ok=True)
 
-summary(net, input_size = (400, 3, 32, 32))
-print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
+# summary(net, input_size = (400, 3, 32, 32))
+# print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt.pth'
+# checkpoint_path = './checkpoint/ckpt.pth'
 
 if os.path.exists(checkpoint_path):
     try:
@@ -201,12 +203,60 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
-for epoch in range(start_epoch, start_epoch+10):
+for epoch in range(start_epoch, start_epoch+210):
+    print(epoch)
     train(epoch)
     test(epoch)
     scheduler.step()
     if epoch == 9:
         predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions.csv")
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions9.csv")
+        print("over")
+    if epoch == 59:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
+        print("over")
+    if epoch == 109:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
+        print("over")
+    if epoch == 189:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
+        print("over")
+    if epoch == 209:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions209.csv")
         print("over")
 
+# if __name__ == "__main__":
+#     net = ResNet5M()
+#     net = net.to(device)
+#     if device == 'cuda':
+#         net = torch.nn.DataParallel(net)
+#         cudnn.benchmark = True
+#     net.load_state_dict(torch.load("checkpoint.pth"))
+#     test(epoch)
+#     # scheduler.step()
+#         # if epoch == 29:
+#     predictions = generate_predictions(net, testloader)
+#     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions.csv")
+#     print("over")
+
+# if __name__ == "__main__":
+#     net = ResNet5M()
+#     net = net.to(device)
+#     if device == 'cuda':
+#         net = torch.nn.DataParallel(net)
+#         cudnn.benchmark = True
+#     net.load_state_dict(torch.load("checkpoint.pth"))
+#     for epoch in range(start_epoch, start_epoch+30):
+#         train(epoch)
+#         test(epoch)
+#         scheduler.step()
+#         if epoch == 29:
+#             predictions = generate_predictions(net, testloader)
+#             save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions.csv")
+#             print("over")
+
+    
