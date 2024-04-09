@@ -81,7 +81,7 @@ print("test image tensor", len(test_images_tensor))
 print("test images tensor", len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size =  32
+batch_size =  128
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 print("train loader length: ", len(trainloader))
 # Testing dataset
@@ -108,7 +108,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt_epoch30.pth'
+checkpoint_path = './checkpoint/ckpt_epoch115.pth'
 
 if os.path.exists(checkpoint_path):
     try:
