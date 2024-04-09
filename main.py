@@ -82,7 +82,7 @@ print("test image tensor", len(test_images_tensor))
 print("test images tensor", len(test_labels_tensor))
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size = 128
+batch_size = 400
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 print("train loader length: ", len(trainloader))
 # Testing dataset
@@ -158,34 +158,15 @@ def test(epoch):
     test_loss = 0
     correct = 0
     total = 0
+
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.item()
+        for batch in testloader:
+            images, image_ids = batchimages, image_ids = images.to(device), image_dis.to(device)
+            outputs = net(images)
             _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-
-            progress_bar(batch_idx, len(testloader), 'test Loss: %.3f | test Acc: %.3f%% (%d/%d)'
-                         % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-
-    # Save checkpoint.
-    acc = 100.*correct/total
-    if acc > best_acc:
-        print('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
-        best_acc = acc
-
+            predictions.extend(preds.cpu().numpy())  
+            return predictions
+           
 def generate_predictions(model, test_loader):
     model.eval()  
     predictions = []
@@ -206,7 +187,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
 for epoch in range(start_epoch, start_epoch+210):
     print(epoch)
     train(epoch)
-    test(epoch)
+    # test(epoch)
     scheduler.step()
     if epoch == 9:
         predictions = generate_predictions(net, testloader)
