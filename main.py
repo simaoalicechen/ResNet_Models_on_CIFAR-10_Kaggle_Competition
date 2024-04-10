@@ -98,18 +98,9 @@ print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Batch size change in different epochs:
-# 1-30: 16
-# 30-40: 32
-# 40: 64
-# 62: 128
-# 72: 400
-# 116: 128
-# 120: 400
-
 # Model
-print('==> Building model..')      
-# net = ResNet5M()
+# print('==> Building model..')      
+net = ResNet5M()
 net = ResNet5MWithAttention()
 net = net.to(device)
 if device == 'cuda':
@@ -248,7 +239,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
 # best_acc = checkpoint['best_acc']
 # start_epoch = checkpoint['epoch'] + 1 
 
-for epoch in range(start_epoch, start_epoch+300):
+for epoch in range(start_epoch, start_epoch+200):
     # print(epoch)
     train(epoch)
     valid(epoch)
@@ -285,30 +276,30 @@ for epoch in range(start_epoch, start_epoch+300):
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
         print("over")
-    if epoch == 209:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions209.csv")
-        print("over")
-    if epoch == 229:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions229.csv")
-        print("over")
-    if epoch == 249:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions249.csv")
-        print("over")
-    if epoch == 269:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions269.csv")
-        print("over")
-    if epoch == 279:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions279.csv")
-        print("over")
-    if epoch == 299:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions299.csv")
-        print("over")
+    # if epoch == 209:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions209.csv")
+    #     print("over")
+    # if epoch == 229:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions229.csv")
+    #     print("over")
+    # if epoch == 249:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions249.csv")
+    #     print("over")
+    # if epoch == 269:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions269.csv")
+    #     print("over")
+    # if epoch == 279:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions279.csv")
+    #     print("over")
+    # if epoch == 299:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions299.csv")
+    #     print("over")
 
 
 plot_accuracies()
