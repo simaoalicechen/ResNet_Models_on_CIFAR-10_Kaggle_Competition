@@ -288,8 +288,8 @@ for epoch in range(start_epoch, start_epoch+20):
         print(train_loss_trend)
         print(valid_acc_trend)
         print(valid_loss_trend)
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
     if epoch == 19:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
@@ -299,8 +299,8 @@ for epoch in range(start_epoch, start_epoch+20):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
 
     if epoch == 49:
         predictions = generate_predictions(net, testloader)
@@ -311,8 +311,8 @@ for epoch in range(start_epoch, start_epoch+20):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
     # if epoch == 109:
     #     predictions = generate_predictions(net, testloader)
     #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
