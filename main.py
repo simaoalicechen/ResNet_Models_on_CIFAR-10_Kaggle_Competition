@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
-from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import LambdaLR, StepLR, OneCycleLR
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 from torchinfo import summary
@@ -11,7 +11,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-from models.resnet import ResNet18, ResNet5M
+from models.resnet import ResNet18, ResNet5M, ResNet5MWithDropout, ResNet2_Modified, ResNet5M2Layers
 import matplotlib.pyplot as plt
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
@@ -20,6 +20,7 @@ import pickle
 from models import *
 from utils import progress_bar, plot_losses, plot_acc
 
+# Parser 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true',
@@ -27,8 +28,8 @@ parser.add_argument('--resume', '-r', action='store_true',
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-best_acc = 0  # best test accuracy
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+best_acc = 0  
+start_epoch = 0 
 
 def load_cifar_batch(file):
     with open(file, 'rb') as fo:
@@ -36,19 +37,6 @@ def load_cifar_batch(file):
     return dict
 # Data
 print('==> Preparing data..')
-# transform_train = transforms.Compose([
-#     transforms.RandomCrop(32, padding=4),
-#     transforms.RandomHorizontalFlip(),
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-#     # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-# ])
-
-# transform_test = transforms.Compose([
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-# ])
-
 
 # Getting training and validating data: 
 cifar10_dir = 'data/cifar-10-batches-py'
@@ -79,7 +67,7 @@ all_test_labels.append(batch_test_labels)
 test_images_tensor = torch.Tensor(np.concatenate(all_test_images, axis=0)).to(device)
 test_labels_tensor = torch.Tensor(np.concatenate(all_test_labels, axis=0)).to(torch.long).to(device)
 train_dataset = TensorDataset(train_images_tensor, train_labels_tensor)
-X_train, X_valid, y_train, y_valid = train_test_split(train_images_tensor, train_labels_tensor, test_size=0.2, random_state=42)
+X_train, X_valid, y_train, y_valid = train_test_split(train_images_tensor, train_labels_tensor, test_size=0.1, random_state=42)
 print("all test images", len(all_test_images))
 print("all test labels", len(all_test_labels))
 print("test image tensor", len(test_images_tensor))
@@ -103,7 +91,11 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 # Model
 # print('==> Building model..')      
 net = ResNet5M()
-# net = ResNet5MWithAttention()
+# net = ResNet5MWithDropout()
+# net = ResNet5M2Layers()
+## mimicing the idea from the Kaggle repo 
+# net = ResNet2_Modified(in_channels=3, num_classes=10) 
+
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -133,24 +125,60 @@ print(start_epoch)
 print("best_acc", best_acc)
 
 
+"""
+All kinds of lr, scheduler, optimizer ideas, weight_decay in optimizer, and dropout in the specially defined resnet. 
+You can also call the ResNet with only 2 layers, and the ResNet (similar idea from the Kaggle repo) modified in the resnet.py.
+
+Do what ever combinations you want, just record them in the next section, so they get remebered into our graphs and we can save them. 
+
+If you see any validation acc >= 97.5, let me know, we can decide which one to submit. 
+
+Run as many epochs as possible, but pay attention before overfitting. 
+
+"""
+
+
+# Linearly decreasing the lr, also works fine. using SGD
 initial_lr = 0.01
 final_lr = 0.001
-total_epochs = 20
+total_epochs = 100
 def lr_lambda(epoch):
     return 1 - (epoch / total_epochs)
-
+epochs = 100
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), 
                         # lr=args.lr,
                         lr=initial_lr,
                       momentum=0.9, weight_decay=5e-4)
-# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 scheduler = LambdaLR(optimizer, lr_lambda)
 
+## Using Adam: 
+# max_lr = 0.01
+# grad_clip = 0.1
+# weight_decay_adam = 1e-4
+# opt_func = torch.optim.Adam
+# scheduler = StepLR(optimizer, step_size=5, gamma=0.1) 
+# optimizer = optim.Adam(net.parameters(), lr=0.001)
+## Straight from the Kaggle repo: But we can modify them anyway
+# optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
+# scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+#                                                 steps_per_epoch=len(trainloader))
+    
+
+
+"""
+TODO
+
+ALWAYS record your changes, we don't have to rerun them. Save everything. 
+Any combinations are fine, as long as you can have a reasoning behind it. 
+"""
+
+batch_size_para = "128" 
 lr_para = "LambdaLR"
 scheduler_para = "SGD M 0.9 WD 5e-4"
 dropout_para = "dropout 0"
-l2_lambda_para = "L2 Reg 0" 
+l2_lambda_para = "L2 Reg 0.001" 
 paras_for_graph = [lr_para, scheduler_para, dropout_para, l2_lambda_para]
 
 train_loss_trend = []
@@ -171,6 +199,14 @@ def train(epoch):
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
+
+        # Add L2 regularization to the loss
+        l2_lambda = 0.001  # Adjust the regularization strength
+        l2_reg = 0
+        for param in net.parameters():
+            l2_reg += torch.norm(param)**2
+        loss += l2_lambda * l2_reg
+
         loss.backward()
         optimizer.step()
 
@@ -268,7 +304,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
-for epoch in range(start_epoch, start_epoch+20):
+for epoch in range(start_epoch, start_epoch+100):
     train(epoch)
     valid(epoch)
     scheduler.step()
@@ -280,6 +316,7 @@ for epoch in range(start_epoch, start_epoch+20):
         print(valid_loss_trend)
         plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+
     if epoch == 9:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions9.csv")
@@ -290,9 +327,10 @@ for epoch in range(start_epoch, start_epoch+20):
         print(valid_loss_trend)
         plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+
     if epoch == 19:
         predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions19.csv")
         print("checking progress")
         print(train_acc_trend)
         print(train_loss_trend)
@@ -304,7 +342,7 @@ for epoch in range(start_epoch, start_epoch+20):
 
     if epoch == 49:
         predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions49.csv")
         print("checking progress")
         print(train_acc_trend)
         print(train_loss_trend)
@@ -313,67 +351,32 @@ for epoch in range(start_epoch, start_epoch+20):
         print("over")
         plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
-    # if epoch == 109:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
-    #     print("over")
-    # if epoch == 159:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions159.csv")
-    #     print("over")
-    # if epoch == 169:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions169.csv")
-    #     print("over")
-    # if epoch == 179:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions179.csv")
-    #     print("over")
-    # if epoch == 189:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
-    #     print("over")
-    # if epoch == 199:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
-    #     print("over")
+
+    if epoch == 79:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions79.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+
+    if epoch == 99:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions99.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
 
 
-# plot_losses(train_loss_trend, valid_loss_trend)
-# plot_acc(train_acc_trend, valid_acc_trend)
 
-
-# predictions = generate_predictions(net, testloader)
-# save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
-
-# if __name__ == "__main__":
-#     net = ResNet5M()
-#     net = net.to(device)
-#     if device == 'cuda':
-#         net = torch.nn.DataParallel(net)
-#         cudnn.benchmark = True
-#     net.load_state_dict(torch.load("checkpoint.pth"))
-#     test(epoch)
-#     # scheduler.step()
-#         # if epoch == 29:
-#     predictions = generate_predictions(net, testloader)
-#     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions.csv")
-#     print("over")
-
-# if __name__ == "__main__":
-#     net = ResNet5M()
-#     net = net.to(device)
-#     if device == 'cuda':
-#         net = torch.nn.DataParallel(net)
-#         cudnn.benchmark = True
-#     net.load_state_dict(torch.load("checkpoint.pth"))
-#     for epoch in range(start_epoch, start_epoch+30):
-#         train(epoch)
-#         test(epoch)
-#         scheduler.step()
-#         if epoch == 29:
-#             predictions = generate_predictions(net, testloader)
-#             save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions.csv")
-#             print("over")
 
     

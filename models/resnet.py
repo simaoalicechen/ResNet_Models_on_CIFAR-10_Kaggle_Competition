@@ -61,6 +61,106 @@ class Bottleneck(nn.Module):
         return out
 
 
+class ResNetWithDropout(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10, dropout_prob = 0.1):
+        super(ResNetWithDropout, self).__init__()
+        self.in_planes = 64
+
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(block, 42, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 85, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 171, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 342, num_blocks[3], stride=2)
+        self.linear = nn.Linear(342*block.expansion, num_classes)
+        self.dropout = nn.Dropout(dropout_prob)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.dropout(out)
+        out = self.linear(out)
+        return out
+
+# mimicing the idea of Kaggle repo
+class ResNet2_Modified(nn.Module):
+    def __init__(self, in_channels, num_classes):
+        super(ResNet2_Modified, self).__init__()
+        self.conv1 = conv_block(in_channels, 64)
+        self.conv2 = conv_block(64, 128, pool=True)
+        self.res1 = nn.Sequential(conv_block(128, 128), conv_block(128, 128))
+        
+        self.conv3 = conv_block(128, 256, pool=True)
+        self.conv4 = conv_block(256, 512, pool=True)
+        self.res2 = nn.Sequential(conv_block(512, 512), conv_block(512, 512))
+        
+        self.classifier = nn.Sequential(nn.MaxPool2d(4), 
+                                        nn.Flatten(), 
+                                        nn.Linear(512, num_classes))
+        
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.res1(out) + out
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = self.res2(out) + out
+        out = self.classifier(out)
+        return out
+
+def conv_block(in_channels, out_channels, pool=False):
+    layers = [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1), 
+              nn.BatchNorm2d(out_channels), 
+              nn.ReLU(inplace=True)]
+    if pool: 
+        layers.append(nn.MaxPool2d(2))
+    return nn.Sequential(*layers)
+
+# the end 
+
+class ResNet2(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10):
+        super(ResNet2, self).__init__()
+        self.in_planes = 64
+
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(block, 128, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 256, num_blocks[1], stride=2)
+        self.linear = nn.Linear(256*4, num_classes)  
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = F.avg_pool2d(out, 8)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out)
+        return out
+ 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNet, self).__init__()
@@ -95,16 +195,28 @@ class ResNet(nn.Module):
         return out
 
 
+"""
+TODO
+
+Choose any of the architechture you want, the mimiced Kaggle one should be directly called from main.py
+We have 3 modified architecture here. 
+"""
+
 def ResNet5M():
     return ResNet(BasicBlock, [2, 2, 2, 2])
 
+def ResNet5MWithDropout():
+    return ResNetWithDropout(BasicBlock, [2, 2, 2, 2])
 
-def ResNetSimple():
-    return ResNetSimple(SimpleBlock)
+def ResNet5M2Layers():
+    return ResNet2(BasicBlock, [1, 1])
+
+# Not defined here. 
+# def ResNetSimple():
+#     return ResNetSimple(SimpleBlock)
 
 def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
-
 
 def ResNet34():
     return ResNet(BasicBlock, [3, 4, 6, 3])

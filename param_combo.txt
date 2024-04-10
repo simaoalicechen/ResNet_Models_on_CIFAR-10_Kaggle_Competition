@@ -1,0 +1,107 @@
+1. Experiment 1: The one that got 0.847 on Kaggle Tests: 
+
+    architecture: ResNet5M original
+    total_train_size = 60000 (no validation set)
+    train_batch_size = 400
+    epochs = 200
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), 
+                            lr=args.lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+2. Experiment 2: (no need to re-try, I have the graphs) 95%-ish on validation test, probably a 82% on Kaggle
+
+    architecture: ResNet5M original
+    total_train_size = 50000 (with 10000 - validation)
+    train_batch_size = 128
+    initial_lr = 0.01
+    final_lr = 0.001
+    total_epochs = 20
+    def lr_lambda(epoch):
+        return 1 - (epoch / total_epochs)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(),
+                            lr=initial_lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = LambdaLR(optimizer, lr_lambda)
+
+"""
+For the following, do a test_split on 90% ~ 10%. Let me know if anything's validation acc is over 97.5% at any point, so we can submit to Kaggle. I have the codes on dropout and regularization, you need to (un)comment out and adjust codes around to make them effective. 
+"""
+
+3. Experiment 3: different learning rate (linearly decreasing)
+
+    architecture: ResNet5M original
+    total_train_size = do a 90% ~ 10% test split 
+    train_batch_size = 128
+    initial_lr = 0.01
+    final_lr = 0.0008
+    total_epochs = 100
+    def lr_lambda(epoch):
+        return 1 - (epoch / total_epochs)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(),
+                          lr=initial_lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = LambdaLR(optimizer, lr_lambda)
+
+
+4. Experiment 4: smaller batch size
+
+    architecture: ResNet5M original
+    total_train_size = do a 90% ~ 10% test split 
+    train_batch_size = 32
+    initial_lr = 0.01
+    final_lr = 0.001
+    total_epochs = 100
+    def lr_lambda(epoch):
+        return 1 - (epoch / total_epochs)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(),
+                          lr=initial_lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = LambdaLR(optimizer, lr_lambda)
+
+5. Experiment 5: smaller lr
+
+    architecture: ResNet5M 
+    total_train_size = do a 90% ~ 10% test split 
+    train_batch_size = 128
+    total_epochs = 100
+    def lr_lambda(epoch):
+        return 1 - (epoch / total_epochs)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), 
+                            lr=args.lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+5. Experiment 5: regular lr 
+
+    architecture: ResNet5M original
+    total_train_size = do a 90% ~ 10% test split 
+    train_batch_size = 128
+    initial_lr = 0.01
+    final_lr = 0.0008
+    total_epochs = 100
+    def lr_lambda(epoch):
+        return 1 - (epoch / total_epochs)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(),
+                          lr=initial_lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = LambdaLR(optimizer, lr_lambda)
+
+
+
+
+
+
+
+batch_size_para = "400" 
+lr_para = "LambdaLR"
+scheduler_para = "SGD M 0.9 WD 5e-4"
+dropout_para = "dropout 0"
+l2_lambda_para = "L2 Reg 0" 
+paras_for_graph = [lr_para, scheduler_para, dropout_para, l2_lambda_para]
