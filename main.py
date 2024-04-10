@@ -11,7 +11,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention
+from models.resnet import ResNet18, ResNet5M
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
@@ -88,7 +88,7 @@ train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_tr
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
 batch_size =  128
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size =  32
+# batch_size =  32
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 print("train loader length: ", len(trainloader))
@@ -103,7 +103,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 # Model
 # print('==> Building model..')      
 net = ResNet5M()
-net = ResNet5MWithAttention()
+# net = ResNet5MWithAttention()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -115,7 +115,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
-checkpoint_path = './checkpoint/ckpt_epoch30.pth'
+checkpoint_path = './checkpoint/ckpt_epoch.pth'
 
 if os.path.exists(checkpoint_path):
     try:
