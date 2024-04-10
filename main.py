@@ -11,7 +11,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention, ResNetSimple
+from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
@@ -45,9 +45,9 @@ transform_train = transforms.Compose([
 
 transform_test = transforms.Compose([
     transforms.ToTensor(),
-    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
+
 
 # Getting training and validating data: 
 cifar10_dir = 'data/cifar-10-batches-py'
@@ -88,6 +88,7 @@ train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_tr
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
 batch_size =  128
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
+batch_size =  32
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 print("train loader length: ", len(trainloader))
@@ -113,7 +114,9 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
-checkpoint_path = './checkpoint/ckpt_epoch.pth'
+
+checkpoint_path = './checkpoint/ckpt_epoch30.pth'
+
 if os.path.exists(checkpoint_path):
     try:
         checkpoint = torch.load(checkpoint_path)
