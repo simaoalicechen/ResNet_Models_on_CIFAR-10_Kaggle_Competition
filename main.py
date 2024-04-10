@@ -12,12 +12,13 @@ import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
 from models.resnet import ResNet18, ResNet5M
+import matplotlib.pyplot as plt
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
 import pickle
 from models import *
-from utils import progress_bar, plot_accuracies, plot_losses, plot_lrs
+from utils import progress_bar, plot_losses, plot_acc
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -35,18 +36,18 @@ def load_cifar_batch(file):
     return dict
 # Data
 print('==> Preparing data..')
-transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-])
+# transform_train = transforms.Compose([
+#     transforms.RandomCrop(32, padding=4),
+#     transforms.RandomHorizontalFlip(),
+#     transforms.ToTensor(),
+#     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+#     # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+# ])
 
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-])
+# transform_test = transforms.Compose([
+#     transforms.ToTensor(),
+#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+# ])
 
 
 # Getting training and validating data: 
@@ -88,7 +89,6 @@ train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_tr
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
 batch_size =  128
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-# batch_size =  32
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 print("train loader length: ", len(trainloader))
@@ -135,7 +135,7 @@ print("best_acc", best_acc)
 
 initial_lr = 0.01
 final_lr = 0.001
-total_epochs = 200
+total_epochs = 20
 def lr_lambda(epoch):
     return 1 - (epoch / total_epochs)
 
@@ -146,6 +146,18 @@ optimizer = optim.SGD(net.parameters(),
                       momentum=0.9, weight_decay=5e-4)
 # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 scheduler = LambdaLR(optimizer, lr_lambda)
+
+lr_para = "LambdaLR"
+scheduler_para = "SGD M 0.9 WD 5e-4"
+dropout_para = "dropout 0"
+l2_lambda_para = "L2 Reg 0" 
+paras_for_graph = [lr_para, scheduler_para, dropout_para, l2_lambda_para]
+
+train_loss_trend = []
+train_acc_trend = []
+valid_loss_trend = []
+valid_acc_trend = []
+
 
 # Training
 def train(epoch):
@@ -169,6 +181,12 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'train Loss: %.3f | train Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
+    train_accuracy = 100.0* correct/total
+    train_loss /= len(trainloader)
+
+    train_loss_trend.append(train_loss)
+    train_acc_trend.append(train_accuracy)
     # Save training checkpoint after each epoch
     if not os.path.isdir('checkpoint'):
         os.mkdir('checkpoint')
@@ -187,20 +205,22 @@ def valid(epoch):
     test_loss = 0
     correct = 0
     total = 0
-
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(validloader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
-
             test_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(validloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
+    valid_accuracy = 100.0 * correct / total
+    test_loss /= len(validloader)
+    valid_loss_trend.append(test_loss)
+    valid_acc_trend.append(valid_accuracy)
 
     # Save checkpoint.
     acc = 100.*correct/total
@@ -211,10 +231,25 @@ def valid(epoch):
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
         best_acc = acc
+
+    checkpoint = {
+        'epoch': epoch,
+        'net': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
+        'best_acc': best_acc,
+        'train_loss_trend': train_loss_trend,
+        'valid_loss_trend': valid_loss_trend,
+        'train_acc_trend': train_acc_trend,
+        'valid_acc_trend': valid_acc_trend,
+    }
+
+    if not os.path.isdir('checkpoint'):
+        os.mkdir('checkpoint')
+        torch.save(state, './checkpoint/ckpt.pth')
+    torch.save(checkpoint, f'./checkpoint/ckpt{epoch}.pth')
+
             
 def generate_predictions(model, test_loader):
     model.eval()  
@@ -233,46 +268,83 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
-for epoch in range(start_epoch, start_epoch+200):
-    # print(epoch)
+for epoch in range(start_epoch, start_epoch+20):
     train(epoch)
     valid(epoch)
     scheduler.step()
+    if epoch == 0:
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
     if epoch == 9:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions9.csv")
-        print("over")
-    if epoch == 59:
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+    if epoch == 19:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
         print("over")
-    if epoch == 109:
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+
+    if epoch == 49:
         predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
         print("over")
-    if epoch == 159:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions159.csv")
-        print("over")
-    if epoch == 169:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions169.csv")
-        print("over")
-    if epoch == 179:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions179.csv")
-        print("over")
-    if epoch == 189:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
-        print("over")
-    if epoch == 199:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
-        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch, "no regularization")
+        plot_acc(train_acc_trend, valid_acc_trend, epoch, "no regularization")
+    # if epoch == 109:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions109.csv")
+    #     print("over")
+    # if epoch == 159:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions159.csv")
+    #     print("over")
+    # if epoch == 169:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions169.csv")
+    #     print("over")
+    # if epoch == 179:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions179.csv")
+    #     print("over")
+    # if epoch == 189:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions189.csv")
+    #     print("over")
+    # if epoch == 199:
+    #     predictions = generate_predictions(net, testloader)
+    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
+    #     print("over")
 
 
-plot_accuracies()
+# plot_losses(train_loss_trend, valid_loss_trend)
+# plot_acc(train_acc_trend, valid_acc_trend)
+
+
+# predictions = generate_predictions(net, testloader)
+# save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions59.csv")
 
 # if __name__ == "__main__":
 #     net = ResNet5M()

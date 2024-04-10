@@ -2,9 +2,14 @@ import os
 import sys
 import time
 import math
-
+import matplotlib
+import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.nn.init as init
+matplotlib.use('Agg')  # Use non-interactive backend
+
+
+import matplotlib.pyplot as plt
 
 
 def get_mean_and_std(dataset):
@@ -118,32 +123,58 @@ def format_time(seconds):
         f = '0ms'
     return f
 
-def plot_accuracies(history):
-    accuracies = [x['val_acc'] for x in history]
-    plt.plot(accuracies, '-x')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.title('Accuracy vs. No. of epochs')
-    plt.savefig("accuracy.png")
+# def plot_accuracies(history):
+#     accuracies = [x['val_acc'] for x in history]
+#     plt.plot(accuracies, '-x')
+#     plt.xlabel('epoch')
+#     plt.ylabel('accuracy')
+#     plt.title('Accuracy vs. No. of epochs')
+#     plt.savefig("accuracy.png")
+#     plt.close()
+
+# def plot_losses(history):
+#     train_losses = [x.get('train_loss') for x in checkpoint]
+#     val_losses = [x['val_loss'] for x in history]
+#     plt.plot(train_losses, '-bx')
+#     plt.plot(val_losses, '-rx')
+#     plt.xlabel('epoch')
+#     plt.ylabel('loss')
+#     plt.legend(['Training', 'Validation'])
+#     plt.title('Loss vs. No. of epochs')
+#     plt.savefig("losses.png")
+#     plt.close()
+
+# def plot_lrs(history):
+#     lrs = np.concatenate([x.get('lrs', []) for x in history])
+#     plt.plot(lrs)
+#     plt.xlabel('Batch no.')
+#     plt.ylabel('Learning rate')
+#     plt.title('Learning Rate vs. Batch no.')
+    # plt.savefig("lrs.png")
+    # plt.close()
+
+def plot_losses(train_losses, valid_losses, epoch, hyperparam):
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Train Loss', color='blue')
+    plt.plot(valid_losses, label='Validation Loss', color='orange')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    # title_para = ", ".join(hyperparam)
+    plt.title(f'Training and Validation Loss with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f"losses {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
 
-def plot_losses(history):
-    train_losses = [x.get('train_loss') for x in checkpoint]
-    val_losses = [x['val_loss'] for x in history]
-    plt.plot(train_losses, '-bx')
-    plt.plot(val_losses, '-rx')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.legend(['Training', 'Validation'])
-    plt.title('Loss vs. No. of epochs')
-    plt.savefig("losses.png")
-    plt.close()
-
-def plot_lrs(history):
-    lrs = np.concatenate([x.get('lrs', []) for x in history])
-    plt.plot(lrs)
-    plt.xlabel('Batch no.')
-    plt.ylabel('Learning rate')
-    plt.title('Learning Rate vs. Batch no.')
-    plt.savefig("lrs.png")
+def plot_acc(train_acc, valid_acc, epoch, hyperparam):
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_acc, label='Train Accuracy', color='green')
+    plt.plot(valid_acc, label='Validation Accuracy', color='red')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    # plt.title(f'Training and Validation Accuracy with {hyperparam} {epoch} epoches')
+    plt.title(f'Training and Validation acc with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
