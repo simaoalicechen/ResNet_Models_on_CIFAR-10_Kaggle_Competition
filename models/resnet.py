@@ -200,6 +200,8 @@ TODO
 
 Choose any of the architechture you want, the mimiced Kaggle one should be directly called from main.py
 We have 3 modified architecture here. 
+
+It's probably making more sense for you to choose the combination, as you experiment, because you might get new intuitions where to go. But here are all options. 
 """
 
 def ResNet5M():

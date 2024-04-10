@@ -126,6 +126,14 @@ print("best_acc", best_acc)
 
 
 """
+TODO
+
+It's probably making more sense for you to choose the combination, as you experiment, because you might get new intuitions where to go. But here are all options. 
+
+You can write your records in param_combo.txt and always record them in the _para section in the middle of this file. 
+
+Also choose some rediculous combinations to make the points that certain parameters have to be within a popular range. 
+
 All kinds of lr, scheduler, optimizer ideas, weight_decay in optimizer, and dropout in the specially defined resnet. 
 You can also call the ResNet with only 2 layers, and the ResNet (similar idea from the Kaggle repo) modified in the resnet.py.
 
