@@ -10,12 +10,8 @@ from torchinfo import summary
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
-<<<<<<< HEAD
 from sklearn.model_selection import train_test_split
 from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention, ResNetSimple
-=======
-from models.resnet import ResNet18, ResNet5M, ResNet5MWithAttention
->>>>>>> main
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
 import os
 import argparse
@@ -53,12 +49,6 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-# 1-30: 15
-# 30-40: 32
-# 40: 64
-# 66: 128
-# 72: 400
-
 # Getting training and validating data: 
 cifar10_dir = 'data/cifar-10-batches-py'
 meta_data_dict = load_cifar_batch(os.path.join(cifar10_dir, 'batches.meta'))
@@ -94,14 +84,10 @@ print("all test labels", len(all_test_labels))
 print("test image tensor", len(test_images_tensor))
 print("test images tensor", len(test_labels_tensor))
 # Training dataset
-<<<<<<< HEAD
 train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_transform("train"))
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
 batch_size =  128
-=======
 train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_tensor), transform=get_transform("train"))
-batch_size =  400
->>>>>>> main
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 print("train loader length: ", len(trainloader))
@@ -127,13 +113,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
-
-<<<<<<< HEAD
 checkpoint_path = './checkpoint/ckpt_epoch.pth'
-=======
-checkpoint_path = './checkpoint/ckpt_epoch155.pth'
->>>>>>> main
-
 if os.path.exists(checkpoint_path):
     try:
         checkpoint = torch.load(checkpoint_path)
@@ -141,7 +121,6 @@ if os.path.exists(checkpoint_path):
 
         best_acc = checkpoint['best_acc']
         start_epoch = checkpoint['epoch'] + 1
-        # test_predictions = checkpoint["checkpoint"]
         print('==> Resuming from checkpoint..')
     except FileNotFoundError:
         print(f"Checkpoint file '{checkpoint_path}' not found. Starting from scratch.")
@@ -251,13 +230,6 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
-# checkpoint = torch.load("checkpoint")
-# net.load_state_dict(checkpoint['net'])
-# optimizer.load_state_dict(checkpoint['optimizer'])
-# scheduler.load_state_dict(checkpoint['scheduler'])
-# best_acc = checkpoint['best_acc']
-# start_epoch = checkpoint['epoch'] + 1 
-
 for epoch in range(start_epoch, start_epoch+200):
     # print(epoch)
     train(epoch)
@@ -295,30 +267,6 @@ for epoch in range(start_epoch, start_epoch+200):
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions199.csv")
         print("over")
-    # if epoch == 209:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions209.csv")
-    #     print("over")
-    # if epoch == 229:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions229.csv")
-    #     print("over")
-    # if epoch == 249:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions249.csv")
-    #     print("over")
-    # if epoch == 269:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions269.csv")
-    #     print("over")
-    # if epoch == 279:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions279.csv")
-    #     print("over")
-    # if epoch == 299:
-    #     predictions = generate_predictions(net, testloader)
-    #     save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions299.csv")
-    #     print("over")
 
 
 plot_accuracies()
