@@ -88,7 +88,7 @@ print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Model
+# Models
 # print('==> Building model..')      
 # net = ResNet5M()
 # net = ResNet5MWithDropout()
@@ -323,14 +323,23 @@ for epoch in range(start_epoch+1, start_epoch+201):
     lr_trend.append(current_lr)
     valid(epoch)
     scheduler.step()
+    good_epochs = []
+    n = 1
+    if valid_acc_trend[-1] >= 98:
+        good_epochs.append(epoch)
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename=f"predictionsGood{n}.csv")
+        n += 1
+        print("valid_acc is larger than 0.99")
+
     if epoch == 1:
         print("checking progress")
         print(train_acc_trend)
         print(train_loss_trend)
         print(valid_acc_trend)
         print(valid_loss_trend)
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 10:
@@ -341,8 +350,8 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(train_loss_trend)
         print(valid_acc_trend)
         print(valid_loss_trend)
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 20:
@@ -354,8 +363,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 50:
         predictions = generate_predictions(net, testloader)
@@ -366,8 +376,35 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 60:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions60.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 70:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions70.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend,epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 80:
         predictions = generate_predictions(net, testloader)
@@ -378,8 +415,22 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 90:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions90.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 100:
         predictions = generate_predictions(net, testloader)
@@ -390,8 +441,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 110:
         predictions = generate_predictions(net, testloader)
@@ -402,8 +454,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 120:
         predictions = generate_predictions(net, testloader)
@@ -414,8 +467,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     
     if epoch == 130:
@@ -427,8 +481,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 140:
         predictions = generate_predictions(net, testloader)
@@ -439,8 +494,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 150:
         predictions = generate_predictions(net, testloader)
@@ -451,8 +507,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 160:
         predictions = generate_predictions(net, testloader)
@@ -463,8 +520,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 170:
         predictions = generate_predictions(net, testloader)
@@ -475,8 +533,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 180:
         predictions = generate_predictions(net, testloader)
@@ -487,8 +546,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 190:
         predictions = generate_predictions(net, testloader)
@@ -499,8 +559,9 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
     if epoch == 200:
         predictions = generate_predictions(net, testloader)
@@ -511,8 +572,11 @@ for epoch in range(start_epoch+1, start_epoch+201):
         print(valid_acc_trend)
         print(valid_loss_trend)
         print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch, hyperparam = paras_for_graph)
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+print(good_epochs)
 
 
 
