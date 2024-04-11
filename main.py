@@ -91,8 +91,8 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 # Models
 # print('==> Building model..')      
 # net = ResNet5M()
-# net = ResNet5MWithDropout()
-net = ResNet5M2Layers()
+net = ResNet5MWithDropout()
+# net = ResNet5M2Layers()
 ## mimicing the idea from the Kaggle repo 
 # net = ResNet2_Modified(in_channels=3, num_classes=10) 
 
@@ -183,11 +183,11 @@ ALWAYS record your changes, we don't have to rerun them. Save everything.
 Any combinations are fine, as long as you can have a reasoning behind it. 
 """
 
-resnet_name = "ResNet2Layers"
+resnet_name = "RDropout"
 batch_size_para = "128" 
 lr_para = "args.lr"
 scheduler_para = "SGD WD 5e-4"
-dropout_para = "dropout 0"
+dropout_para = "dropout 0.1"
 l2_lambda_para = "L2 Reg 0" 
 grad_clip_para = "gc 0.1"
 paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
