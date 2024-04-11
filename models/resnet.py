@@ -96,7 +96,7 @@ class ResNetWithDropout(nn.Module):
         out = self.linear(out)
         return out
 
-# mimicing the idea of Kaggle repo
+# mimicking the idea of Kaggle repo
 class ResNet2_Modified(nn.Module):
     def __init__(self, in_channels, num_classes):
         super(ResNet2_Modified, self).__init__()
@@ -201,7 +201,6 @@ TODO
 Choose any of the architechture you want, the mimiced Kaggle one should be directly called from main.py
 We have 3 modified architecture here. 
 
-It's probably making more sense for you to choose the combination, as you experiment, because you might get new intuitions where to go. But here are all options. 
 """
 
 def ResNet5M():

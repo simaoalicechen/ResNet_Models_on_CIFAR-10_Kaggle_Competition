@@ -178,3 +178,47 @@ def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.grid(True)
     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
+
+def get_lrs(optimizer):
+    print("222222")
+    for param_group in optimizer.param_groups:
+        print("1111111")
+        return param_group['lr']
+
+
+def plot_lr(lr_trend, epoch, hyperparam):
+    plt.figure(figsize=(10, 5))
+    plt.plot(lr_trend, '-o', label='Learning Rate')
+    plt.title(f'Learning Rate with {hyperparam} {epoch} epoches')
+    plt.ylabel('lr')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f"lr {' | '.join(hyperparam)} in {epoch} epochs.png")
+    plt.close()
+
+# def plot_lrs(lr_trend, title='Learning Rate Trend', x_label='Batch Number', y_label='Learning Rate'):
+#     plt.figure(figsize=(10, 5))
+#     plt.plot(lr_trend, '-o', label='Learning Rate')
+#     plt.title(title)
+#     plt.xlabel(x_label)
+#     plt.ylabel(y_label)
+#     plt.legend()
+#     plt.grid(True)
+#     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
+#     plt.show()
+
+
+
+
+# def plot_acc(train_acc, valid_acc, epoch, hyperparam):
+#     plt.figure(figsize=(10, 5))
+#     plt.plot(train_acc, label='Train Accuracy', color='green')
+#     plt.plot(valid_acc, label='Validation Accuracy', color='red')
+#     plt.xlabel('Epoch')
+#     plt.ylabel('Accuracy')
+#     # plt.title(f'Training and Validation Accuracy with {hyperparam} {epoch} epoches')
+#     plt.title(f'Training and Validation acc with {' | '.join(hyperparam)} {epoch} epoches')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
+#     plt.close()
