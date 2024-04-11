@@ -160,10 +160,10 @@ def plot_losses(train_losses, valid_losses, epoch, hyperparam):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     # title_para = ", ".join(hyperparam)
-    plt.title(f'Training and Validation Loss with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.title(f'Training and Validation Loss with {" | ".join(hyperparam)} {epoch} epoches')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"losses {' | '.join(hyperparam)} in {epoch} epochs.png")
+    plt.savefig(f'losses {" | ".join(hyperparam)} in {epoch} epochs.png')
     plt.close()
 
 def plot_acc(train_acc, valid_acc, epoch, hyperparam):
@@ -173,7 +173,7 @@ def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     # plt.title(f'Training and Validation Accuracy with {hyperparam} {epoch} epoches')
-    plt.title(f'Training and Validation acc with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.title(f'Training and Validation acc with {" | ".join(hyperparam)} {epoch} epoches')
     plt.legend()
     plt.grid(True)
     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
