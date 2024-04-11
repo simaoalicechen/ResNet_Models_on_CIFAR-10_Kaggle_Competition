@@ -154,7 +154,6 @@ def get_lrs(optimizer):
         print("1111111")
         return param_group['lr']
 
-
 def plot_lr(lr_trend, epoch, hyperparam):
     plt.figure(figsize=(10, 5))
     plt.plot(lr_trend, '-o', label='Learning Rate')

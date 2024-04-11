@@ -183,13 +183,14 @@ ALWAYS record your changes, we don't have to rerun them. Save everything.
 Any combinations are fine, as long as you can have a reasoning behind it. 
 """
 
+resnet_name = "ResNet2Layers"
 batch_size_para = "128" 
 lr_para = "args.lr"
 scheduler_para = "SGD WD 5e-4"
 dropout_para = "dropout 0"
 l2_lambda_para = "L2 Reg 0" 
 grad_clip_para = "gc 0.1"
-paras_for_graph = [lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
+paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
 
 train_loss_trend = []
 train_acc_trend = []
@@ -319,7 +320,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     print(f"Predictions saved to {csv_filename}")
 
 
-for epoch in range(start_epoch+1, start_epoch+201):
+for epoch in range(start_epoch+1, start_epoch+301):
     train(epoch)
     valid(epoch)
     scheduler.step()
@@ -566,6 +567,58 @@ for epoch in range(start_epoch+1, start_epoch+201):
     if epoch == 200:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions200.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 250:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions250.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 300:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions300.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+    
+    if epoch == 350:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions350.csv")
+        print("checking progress")
+        print(train_acc_trend)
+        print(train_loss_trend)
+        print(valid_acc_trend)
+        print(valid_loss_trend)
+        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
+
+    if epoch == 400:
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions400.csv")
         print("checking progress")
         print(train_acc_trend)
         print(train_loss_trend)
