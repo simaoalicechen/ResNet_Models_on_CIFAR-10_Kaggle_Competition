@@ -92,9 +92,9 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 # print('==> Building model..')      
 # net = ResNet5M()
 # net = ResNet5MWithDropout()
-# net = ResNet5M2Layers()
+net = ResNet5M2Layers()
 ## mimicing the idea from the Kaggle repo 
-net = ResNet2_Modified(in_channels=3, num_classes=10) 
+# net = ResNet2_Modified(in_channels=3, num_classes=10) 
 
 net = net.to(device)
 if device == 'cuda':
@@ -137,7 +137,7 @@ Also choose some rediculous combinations to make the points that certain paramet
 All kinds of lr, scheduler, optimizer ideas, weight_decay in optimizer, and dropout in the specially defined resnet. 
 You can also call the ResNet with only 2 layers, and the ResNet (similar idea from the Kaggle repo) modified in the resnet.py.
 
-Do what ever combinations you want, just record them in the next section, so they get remebered into our graphs and we can save them. 
+Do whatever combinations you want, just record them in the next section, so they get remebered into our graphs and we can save them. 
 
 If you see any validation acc >= 97.5, let me know, we can decide which one to submit. 
 
@@ -152,26 +152,27 @@ Run as many epochs as possible, but pay attention before overfitting.
 # def lr_lambda(epoch):
 #     return 1 - (epoch / total_epochs)
 # epochs = 100
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(net.parameters(), 
-#                         # lr=args.lr,
-#                         lr=initial_lr,
-#                       momentum=0.9, weight_decay=5e-4)
-# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+grad_clip = 0.1
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(net.parameters(), 
+                        lr=args.lr,
+                        # lr=initial_lr,
+                      momentum=0.9, weight_decay=5e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 # scheduler = LambdaLR(optimizer, lr_lambda)
 
 ## Using Adam: 
-epochs = 200
-max_lr = 0.01
-grad_clip = 0.1
-criterion = nn.CrossEntropyLoss()
-weight_decay_adam = 1e-4
-opt_func = torch.optim.Adam
-optimizer = optim.Adam(net.parameters(), lr=0.001)
-# Straight from the Kaggle repo: But we can modify them anyway
-optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-                                                steps_per_epoch=len(trainloader))
+# epochs = 200
+# max_lr = 0.01
+# grad_clip = 0.1
+# criterion = nn.CrossEntropyLoss()
+# weight_decay_adam = 1e-4
+# opt_func = torch.optim.Adam
+# optimizer = optim.Adam(net.parameters(), lr=0.001)
+# # Straight from the Kaggle repo: But we can modify them anyway
+# optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
+# scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+#                                                 steps_per_epoch=len(trainloader))
     
 
 
@@ -183,8 +184,8 @@ Any combinations are fine, as long as you can have a reasoning behind it.
 """
 
 batch_size_para = "128" 
-lr_para = "LambdaLR"
-scheduler_para = "Adam WD 1e-4"
+lr_para = "args.lr"
+scheduler_para = "SGD WD 5e-4"
 dropout_para = "dropout 0"
 l2_lambda_para = "L2 Reg 0" 
 grad_clip_para = "gc 0.1"
@@ -194,6 +195,7 @@ train_loss_trend = []
 train_acc_trend = []
 valid_loss_trend = []
 valid_acc_trend = []
+lr_trend = []
 
 
 # for param in net.parameters():
@@ -316,23 +318,21 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
+
 for epoch in range(start_epoch+1, start_epoch+201):
-    lr_trend = []
     train(epoch)
-    current_lr = optimizer.param_groups[0]['lr']
-    lr_trend.append(current_lr)
     valid(epoch)
     scheduler.step()
     good_epochs = []
     n = 1
-    if valid_acc_trend[-1] >= 98:
+    if valid_acc_trend[-1] >= 99:
         good_epochs.append(epoch)
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename=f"predictionsGood{n}.csv")
         n += 1
         print("valid_acc is larger than 0.99")
 
-    if epoch == 1:
+    if epoch == 2:
         print("checking progress")
         print(train_acc_trend)
         print(train_loss_trend)
@@ -581,4 +581,4 @@ print(good_epochs)
 
 
 
-    
+     
