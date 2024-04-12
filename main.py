@@ -330,14 +330,13 @@ for epochs in epoch_grid:
                     train_acc_trend = []
                     valid_loss_trend = []
                     valid_acc_trend = []
-
+                    lr_trend = []
 
                     # for param in net.parameters():
                     #     print(param.grad.shape)
 
 
                     for epoch in range(epochs):
-                        lr_trend = []
                         train(epoch)
                         current_lr = optimizer.param_groups[0]['lr']
                         lr_trend.append(current_lr)
