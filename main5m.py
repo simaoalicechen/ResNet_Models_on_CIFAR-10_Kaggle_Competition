@@ -185,9 +185,9 @@ Any combinations are fine, as long as you can have a reasoning behind it.
 # nets = []
 # Currently ResNet34
 epoch_grid = [25]
-lr_grid = [0.1, 0.01]
-grad_clip_grid = [0.1, 0.01]
-weight_decay_grid = [1e-4, 1e-5]
+lr_grid = [0.1, 0.01, 0.001]
+grad_clip_grid = [0.1]
+weight_decay_grid = [1e-4]
 optimizer_grid = [torch.optim.SGD]
 
 for epochs in epoch_grid:
@@ -195,7 +195,7 @@ for epochs in epoch_grid:
         for grad_clip in grad_clip_grid:
             for weight_decay_adam in weight_decay_grid:
                 for opt_func in optimizer_grid:
-                    net = ResNet34()
+                    net = ResNet5M()
                     # ResNet5M2Layers, ResNet34
 
                     net = net.to(device)
