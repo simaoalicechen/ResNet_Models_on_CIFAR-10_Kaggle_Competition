@@ -149,9 +149,7 @@ def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.close()
 
 def get_lrs(optimizer):
-    print("222222")
     for param_group in optimizer.param_groups:
-        print("1111111")
         return param_group['lr']
 
 def plot_lr(lr_trend, epoch, hyperparam):

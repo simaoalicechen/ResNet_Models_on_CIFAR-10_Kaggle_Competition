@@ -93,10 +93,10 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 # net = ResNet5M()
 # net = ResNet34()
 # net = ResNet5MWithDropout()
-# net = ResNet5M2Layers()
+net = ResNet5M2Layers()
 ## mimicing the idea from the Kaggle repo 
 # net = ResNet2_Modified(in_channels=3, num_classes=10) 
-net = ResNet34()
+# net = ResNet34()
 # ResNet5M2Layers, ResNet34
 
 net = net.to(device)
@@ -148,37 +148,40 @@ Run as many epochs as possible, but pay attention before overfitting.
 """
 
 
-# Linearly decreasing the lr, also works fine. using SGD
-# initial_lr = 0.01
-# final_lr = 0.001
-# total_epochs = 100
-# def lr_lambda(epoch):
-#     return 1 - (epoch / total_epochs)
-# epochs = 100
-# grad_clip = 0.1
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(net.parameters(), 
-#                         lr=args.lr,
-#                         # lr=initial_lr,
-#                       momentum=0.9, weight_decay=5e-4)
-# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-# scheduler = LambdaLR(optimizer, lr_lambda)
-
-## Using Adam: 
-# epochs = 200
-# max_lr = 0.01
-# grad_clip = 0.1
-# criterion = nn.CrossEntropyLoss()
-# weight_decay_adam = 1e-4
-# opt_func = torch.optim.Adam
-# optimizer = optim.Adam(net.parameters(), lr=0.001)
-# # Straight from the Kaggle repo: But we can modify them anyway
+# Patrick: 
+# Using SGD and change the net to the ResNet5M
+# only change lr 0.01, and 0.001, wd: 1e-4 and 1e-5 
+# so you have 4 pairs of comparables
+epochs = 25
+max_lr = 0.01
+grad_clip = 0.1
+criterion = nn.CrossEntropyLoss()
+weight_decay_SGD = 1e-4
+opt_func = torch.optim.add_argument
+optimizer = optim.SGD(net.parameters(), 
+                        lr=args.lr,
+                        # lr=initial_lr,
+                      momentum=0.9, weight_decay=weight_decay_SGD)
+# Straight from the Kaggle repo: But we can modify them anyway
 # optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-# scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-#                                                 steps_per_epoch=len(trainloader))
+scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+                                                steps_per_epoch=len(trainloader))
     
 
-
+## Using Adam: 
+## Alice: 
+epochs = 25
+max_lr = 0.01
+grad_clip = 0.1
+criterion = nn.CrossEntropyLoss()
+weight_decay_adam = 1e-4
+opt_func = torch.optim.Adam
+optimizer = optim.Adam(net.parameters(), lr=0.01)
+# Straight from the Kaggle repo: But we can modify them anyway
+optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
+scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+                                                steps_per_epoch=len(trainloader))
+    
 """
 TODO
 
@@ -186,43 +189,45 @@ ALWAYS record your changes, we don't have to rerun them. Save everything.
 Any combinations are fine, as long as you can have a reasoning behind it. 
 """
 
-# resnet_name = "ResModified"
-# batch_size_para = "128" 
-# lr_para = "OneCycleLR"
-# scheduler_para = "Adam 1e-4"
-# dropout_para = "dropout 0"
-# l2_lambda_para = "L2 Reg 0" 
-# grad_clip_para = "gc 0.1"
-# paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
+resnet_name = "Res2Layers"
+batch_size_para = "128" 
+# previously, lr was 0.001
+lr_para = "OneCycleLR 0.01"
+scheduler_para = "Adam 1e-4"
+dropout_para = "dropout 0"
+l2_lambda_para = "L2 Reg 0" 
+grad_clip_para = "gc 0.1"
+paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
+print(paras_for_graph)
 
 # nets = []
 # Currently ResNet34
-epoch_grid = [25]
-lr_grid = [0.1, 0.01]
-grad_clip_grid = [0.1, 0.01]
-weight_decay_grid = [1e-4, 1e-5]
-optimizer_grid = [torch.optim.Adam, torch.optim.SGD]
+# epoch_grid = [25]
+# lr_grid = [0.1, 0.01]
+# grad_clip_grid = [0.1, 0.01]
+# weight_decay_grid = [1e-4, 1e-5]
+# optimizer_grid = [torch.optim.Adam, torch.optim.SGD]
 
-for epochs in epoch_grid:
-    for max_lr in lr_grid:
-        for grad_clip in grad_clip_grid:
-            for weight_decay_adam in weight_decay_grid:
-                for opt_func in optimizer_grid:
-                    criterion = nn.CrossEntropyLoss()
-                    optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-                    scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-                                                                    steps_per_epoch=len(trainloader))
+# for epochs in epoch_grid:
+#     for max_lr in lr_grid:
+#         for grad_clip in grad_clip_grid:
+#             for weight_decay_adam in weight_decay_grid:
+#                 for opt_func in optimizer_grid:
+#                     criterion = nn.CrossEntropyLoss()
+#                     optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
+#                     scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+#                                                                     steps_per_epoch=len(trainloader))
 
 
-batch_size_para = batch_size 
-lr_para = "OneCycleLR"
-scheduler_para = "WD: " + str(weight_decay_adam)
-lr_para = "Max LR: " + str(max_lr)
-grad_clip_para = "GC: " + str(grad_clip)
-opt_para = str(opt_func)
-epoch_para = "Epochs: " + str(epochs)
-paras_for_graph = [lr_para, scheduler_para, grad_clip_para, opt_para, epoch_para, lr_para]
-
+# batch_size_para = batch_size 
+# lr_para = "OneCycleLR"
+# scheduler_para = "WD: " + str(weight_decay_adam)
+# lr_para = "Max LR: " + str(max_lr)
+# grad_clip_para = "GC: " + str(grad_clip)
+# opt_para = str(opt_func)
+# epoch_para = "Epochs: " + str(epochs)
+# paras_for_graph = [lr_para, scheduler_para, grad_clip_para, opt_para, epoch_para, lr_para]
+# print(paras_for_graph)
 train_loss_trend = []
 train_acc_trend = []
 valid_loss_trend = []
@@ -253,8 +258,7 @@ def train(epoch):
             nn.utils.clip_grad_value_(list(net.parameters()), grad_clip)
 
         optimizer.step()
-        current_lr = optimizer.param_groups[0]['lr']
-        lr_trend.append(current_lr)
+        lr_trend.append(get_lrs(optimizer))
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -372,6 +376,7 @@ def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv
 
 
 for epoch in range(start_epoch+1, start_epoch+25):
+    print(start_epoch+25)
     train(epoch)
     valid(epoch)
     scheduler.step()
@@ -418,15 +423,20 @@ for epoch in range(start_epoch+1, start_epoch+25):
         plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-    if epoch == 25:
+
+    if epoch == 24:
+        print(epoch)
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions25.csv")
-        print("checking progress")
-        print(train_acc_trend)
-        print(train_loss_trend)
-        print(valid_acc_trend)
-        print(valid_loss_trend)
-        print("over")
+        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch+1, hyperparam = paras_for_graph)
+        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch+1, hyperparam = paras_for_graph)
+        plot_lr(lr_trend, epoch = epoch+1, hyperparam = paras_for_graph)
+    
+
+    if epoch == 25:
+        print(epoch)
+        predictions = generate_predictions(net, testloader)
+        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions25.csv")
         plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
