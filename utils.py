@@ -130,7 +130,7 @@ def plot_losses(train_losses, valid_losses, epoch, hyperparam):
     plt.plot(valid_losses, label='Validation Loss', color='orange')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title(f'Training and Validation Loss with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.title(f'Loss with {' | '.join(hyperparam)} {epoch} epoches')
     plt.legend()
     plt.grid(True)
     plt.savefig(f"losses {' | '.join(hyperparam)} in {epoch} epochs.png")
@@ -142,7 +142,7 @@ def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.plot(valid_acc, label='Validation Accuracy', color='red')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
-    plt.title(f'Training and Validation acc with {' | '.join(hyperparam)} {epoch} epoches')
+    plt.title(f'acc with {' | '.join(hyperparam)} {epoch} epoches')
     plt.legend()
     plt.grid(True)
     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
@@ -157,11 +157,12 @@ def get_lrs(optimizer):
 def plot_lr(lr_trend, epoch, hyperparam):
     plt.figure(figsize=(10, 5))
     plt.plot(lr_trend, '-o', label='Learning Rate')
-    plt.title(f'Learning Rate with {hyperparam} {epoch} epoches')
+    # plt.title(f'Learning Rate with {hyperparam} {epoch} epoches')
+    plt.title(f'LR with {' | '.join(hyperparam)} {epoch} epoches')
     plt.ylabel('lr')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"lr {' | '.join(hyperparam)} in {epoch} epochs.png")
+    plt.savefig(f"LR {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
 
 
