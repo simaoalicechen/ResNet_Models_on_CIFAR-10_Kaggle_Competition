@@ -1,3 +1,9 @@
+"""
+Codes are based upon this github repository: 
+
+https://github.com/kuangliu/pytorch-cifar
+
+"""
 import torch
 import numpy as np
 import torch.nn as nn
@@ -152,20 +158,18 @@ Run as many epochs as possible, but pay attention before overfitting.
 # Using SGD and change the net to the ResNet5M
 # only change lr 0.01, and 0.001, wd: 1e-4 and 1e-5 
 # so you have 4 pairs of comparables
-epochs = 25
-max_lr = 0.01
-grad_clip = 0.1
-criterion = nn.CrossEntropyLoss()
-weight_decay_SGD = 1e-4
-opt_func = torch.optim.add_argument
-optimizer = optim.SGD(net.parameters(), 
-                        lr=args.lr,
-                        # lr=initial_lr,
-                      momentum=0.9, weight_decay=weight_decay_SGD)
-# Straight from the Kaggle repo: But we can modify them anyway
-# optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-                                                steps_per_epoch=len(trainloader))
+# epochs = 25
+# max_lr = 0.01
+# grad_clip = 0.1
+# criterion = nn.CrossEntropyLoss()
+# weight_decay_SGD = 1e-4
+# opt_func = torch.optim.add_argument
+# optimizer = optim.SGD(net.parameters(), 
+#                         lr=args.lr,
+#                         # lr=initial_lr,
+#                       momentum=0.9, weight_decay=weight_decay_SGD)
+# scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+#                                                 steps_per_epoch=len(trainloader))
     
 
 ## Using Adam: 
@@ -176,7 +180,7 @@ grad_clip = 0.1
 criterion = nn.CrossEntropyLoss()
 weight_decay_adam = 1e-4
 opt_func = torch.optim.Adam
-optimizer = optim.Adam(net.parameters(), lr=0.01)
+optimizer = optim.Adam(net.parameters(), lr=0.001)
 # Straight from the Kaggle repo: But we can modify them anyway
 optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
 scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
@@ -192,7 +196,7 @@ Any combinations are fine, as long as you can have a reasoning behind it.
 resnet_name = "Res2Layers"
 batch_size_para = "128" 
 # previously, lr was 0.001
-lr_para = "OneCycleLR 0.01"
+lr_para = "OneCycleLR 0.001"
 scheduler_para = "Adam 1e-4"
 dropout_para = "dropout 0"
 l2_lambda_para = "L2 Reg 0" 
