@@ -292,8 +292,6 @@ valid_loss_trend = []
 valid_acc_trend = []
 lr_trend = []
 
-
-
     
 # Training
 for epoch in range(start_epoch+1, start_epoch+200):
