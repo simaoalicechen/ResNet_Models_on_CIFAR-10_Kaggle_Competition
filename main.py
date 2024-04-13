@@ -1,3 +1,12 @@
+"""
+Codes are built upon this github repo: 
+
+https://github.com/kuangliu/pytorch-cifar
+
+Main branch has the clean codes without training traces, the checkpoint data should be in a branch called "final report", because we re-run it after we confirm it was the best record we got from Kaggle competition. 
+
+"""
+
 import torch
 import os
 import argparse
@@ -38,7 +47,7 @@ def load_cifar_batch(file):
 # Data
 print('==> Preparing data..')
 
-# Getting training and validating data: 
+# Getting training and validation data: 
 cifar10_dir = 'data/cifar-10-batches-py'
 meta_data_dict = load_cifar_batch(os.path.join(cifar10_dir, 'batches.meta'))
 label_names = meta_data_dict[b'label_names']
@@ -67,7 +76,7 @@ test_labels_tensor = torch.Tensor(np.concatenate(all_test_labels, axis=0)).to(to
 train_dataset = TensorDataset(train_images_tensor, train_labels_tensor)
 X_train, X_valid, y_train, y_valid = train_test_split(train_images_tensor, train_labels_tensor, test_size=0.1, random_state=42)
 
-# Training dataset
+# Training and Vaidation dataset
 train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_transform("train"))
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
 batch_size =  128
@@ -84,7 +93,7 @@ print("test loader length: ", len(testloader))
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Models
+# Models to choose from 
 # print('==> Building model..')      
 net = ResNet5M()
 # net = ResNet34()
@@ -101,11 +110,13 @@ if device == 'cuda':
 checkpoint_dir = './checkpoint/'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
+# print summary for clarity 
 summary(net, input_size = (400, 3, 32, 32))
 print("Trainable Parameters: "+ str(summary(net, input_size = (400, 3, 32, 32)).trainable_params))
 
 checkpoint_path = './checkpoint/ckpt_epoch.pth'
 
+# create checkpoints
 if os.path.exists(checkpoint_path):
     try:
         checkpoint = torch.load(checkpoint_path)
@@ -118,122 +129,8 @@ if os.path.exists(checkpoint_path):
         print(f"Checkpoint file '{checkpoint_path}' not found. Starting from scratch.")
 else:
     print(f"Checkpoint file '{checkpoint_path}' not found. Starting from scratch.")
-print(start_epoch)
-print("best_acc", best_acc)
 
-
-"""
-TODO
-
-It's probably making more sense for you to choose the combination, as you experiment, because you might get new intuitions where to go. But here are all options. 
-
-You can write your records in param_combo.txt and always record them in the _para section in the middle of this file. 
-
-Also choose some rediculous combinations to make the points that certain parameters have to be within a popular range. 
-
-All kinds of lr, scheduler, optimizer ideas, weight_decay in optimizer, and dropout in the specially defined resnet. 
-You can also call the ResNet with only 2 layers, and the ResNet (similar idea from the Kaggle repo) modified in the resnet.py.
-
-Do whatever combinations you want, just record them in the next section, so they get remebered into our graphs and we can save them. 
-
-If you see any validation acc >= 97.5, let me know, we can decide which one to submit. 
-
-Run as many epochs as possible, but pay attention before overfitting. 
-"""
-
-
-# Patrick: 
-# Using SGD and change the net to the ResNet5M
-# only change lr 0.01, and 0.001, wd: 1e-4 and 1e-5 
-# so you have 4 pairs of comparables
-epochs = 25
-max_lr = 0.01
-grad_clip = 0.1
-criterion = nn.CrossEntropyLoss()
-weight_decay_SGD = 1e-4
-opt_func = torch.optim.add_argument
-optimizer = optim.SGD(net.parameters(), 
-                        lr=args.lr,
-                        # lr=initial_lr,
-                      momentum=0.9, weight_decay=weight_decay_SGD)
-# Straight from the Kaggle repo: But we can modify them anyway
-# optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-                                                steps_per_epoch=len(trainloader))
-    
-
-## Using Adam: 
-## Alice: 
-epochs = 25
-max_lr = 0.01
-grad_clip = 0.1
-criterion = nn.CrossEntropyLoss()
-weight_decay_adam = 1e-4
-opt_func = torch.optim.Adam
-optimizer = optim.Adam(net.parameters(), lr=0.01)
-# Straight from the Kaggle repo: But we can modify them anyway
-optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-                                                steps_per_epoch=len(trainloader))
-    
-"""
-TODO
-
-ALWAYS record your changes, we don't have to rerun them. Save everything. 
-Any combinations are fine, as long as you can have a reasoning behind it. 
-"""
-
-resnet_name = "Res2Layers"
-batch_size_para = "128" 
-# previously, lr was 0.001
-lr_para = "OneCycleLR 0.01"
-scheduler_para = "Adam 1e-4"
-dropout_para = "dropout 0"
-l2_lambda_para = "L2 Reg 0" 
-grad_clip_para = "gc 0.1"
-paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
-print(paras_for_graph)
-
-# nets = []
-# Currently ResNet34
-# epoch_grid = [25]
-# lr_grid = [0.1, 0.01]
-# grad_clip_grid = [0.1, 0.01]
-# weight_decay_grid = [1e-4, 1e-5]
-# optimizer_grid = [torch.optim.Adam, torch.optim.SGD]
-
-# for epochs in epoch_grid:
-#     for max_lr in lr_grid:
-#         for grad_clip in grad_clip_grid:
-#             for weight_decay_adam in weight_decay_grid:
-#                 for opt_func in optimizer_grid:
-#                     criterion = nn.CrossEntropyLoss()
-#                     optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-#                     scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-#                                                                     steps_per_epoch=len(trainloader))
-
-
-# batch_size_para = batch_size 
-# lr_para = "OneCycleLR"
-# scheduler_para = "WD: " + str(weight_decay_adam)
-# lr_para = "Max LR: " + str(max_lr)
-# grad_clip_para = "GC: " + str(grad_clip)
-# opt_para = str(opt_func)
-# epoch_para = "Epochs: " + str(epochs)
-# paras_for_graph = [lr_para, scheduler_para, grad_clip_para, opt_para, epoch_para, lr_para]
-# print(paras_for_graph)
-train_loss_trend = []
-train_acc_trend = []
-valid_loss_trend = []
-valid_acc_trend = []
-lr_trend = []
-
-
-# for param in net.parameters():
-#     print(param.grad.shape)
-
-
-# Training
+# training function 
 def train(epoch):
     print('\nEpoch: %d' % epoch)
     net.train()
@@ -267,6 +164,7 @@ def train(epoch):
 
     train_loss_trend.append(train_loss)
     train_acc_trend.append(train_accuracy)
+
     # Save training checkpoint after each epoch
     if not os.path.isdir('checkpoint'):
         os.mkdir('checkpoint')
@@ -279,6 +177,7 @@ def train(epoch):
     }, './checkpoint/ckpt_epoch{}.pth'.format(epoch))
 
 
+# validation set testing 
 def valid(epoch):
     global best_acc
     net.eval()
@@ -330,7 +229,7 @@ def valid(epoch):
         torch.save(state, './checkpoint/ckpt.pth')
     torch.save(checkpoint, f'./checkpoint/ckpt{epoch}.pth')
 
-            
+# Help to test on the provided test data      
 def generate_predictions(model, test_loader):
     model.eval()  
     predictions = []
@@ -343,39 +242,70 @@ def generate_predictions(model, test_loader):
             predictions.extend(preds.cpu().numpy())  
     return predictions
 
+# functions to save the predictions to desirable output
 def save_predictions_to_csv(predictions, test_ids, csv_filename="predictions.csv"):
     df = pd.DataFrame({"ID": test_ids, "Labels": predictions})
     df.to_csv(csv_filename, index=False)
     print(f"Predictions saved to {csv_filename}")
 
 
-# nets = [ResNet2(), ResNetWithDropout()]
-# epoch_grid = [25, 50, 100]
-# lr_grid = [0.1, 0.01, 0.001]
-# grad_clip_grid = [1, 0.1, 0.01]
-# weight_decay_grid = [1e-3, 1e-4, 1e-5]
-# optimizer_grid = [torch.optim.Adam, torch.optim.SGD]
 
-# for epochs in epoch_grid:
-#     for max_lr in lr_grid:
-#         for grad_clip in grad_clip_grid:
-#             for weight_decay_adam in weight_decay_grid:
-#                 for opt_func in optimizer_grid:
-#                     criterion = nn.CrossEntropyLoss()
-#                     optimizer = opt_func(net.parameters(), max_lr, weight_decay=weight_decay_adam)
-#                     scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
-#                                                                     steps_per_epoch=len(trainloader))
+"""
+TODO: Hyperparameters
+Choose your combination of hyperparameters and record in the codes after
+"""
+
+# Set hyperparameters 
+epochs = 200
+max_lr = 0.01
+grad_clip = 0
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                      momentum=0.9, weight_decay=5e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+"""
+TODO
+
+ALWAYS record changes in the below variables so they appear in graphs and it would be easier to keep track. 
+
+"""
+
+# Keep track of the hyperparameters 
+resnet_name = "ResNet5M"
+batch_size_para = "400" 
+lr_para = "CosineAnnealingLR 0.01"
+scheduler_para = "SGD WD 5e-4"
+dropout_para = "dropout 0"
+l2_lambda_para = "L2 Reg 0" 
+grad_clip_para = "gc 0"
+paras_for_graph = [resnet_name, lr_para, scheduler_para, dropout_para, l2_lambda_para, grad_clip_para]
+
+# print out hyperparameters for clarity
+print(paras_for_graph)
+
+
+# Create lists to keep track of important metrics 
+train_loss_trend = []
+train_acc_trend = []
+valid_loss_trend = []
+valid_acc_trend = []
+lr_trend = []
 
 
 
-
-for epoch in range(start_epoch+1, start_epoch+25):
-    print(start_epoch+25)
+    
+# Training
+for epoch in range(start_epoch+1, start_epoch+200):
     train(epoch)
     valid(epoch)
     scheduler.step()
+
+    # create a list to collect good epochs 
     good_epochs = []
     n = 1
+
+    # keep track of the high validation acc
     if valid_acc_trend[-1] >= 99:
         good_epochs.append(epoch)
         predictions = generate_predictions(net, testloader)
@@ -383,6 +313,7 @@ for epoch in range(start_epoch+1, start_epoch+25):
         n += 1
         print("valid_acc is larger than 0.99")
 
+    # Check progress here to check if plots look good 
     if epoch == 2:
         print("checking progress")
         print(train_acc_trend)
@@ -393,6 +324,7 @@ for epoch in range(start_epoch+1, start_epoch+25):
         plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
+    # Check progress of all the milestones, so if there is a clear overfit, we can save the good outputs before overfit
     if epoch == 10:
         predictions = generate_predictions(net, testloader)
         save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions10.csv")
@@ -417,15 +349,6 @@ for epoch in range(start_epoch+1, start_epoch+25):
         plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-
-    if epoch == 24:
-        print(epoch)
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions25.csv")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch+1, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch+1, hyperparam = paras_for_graph)
-        plot_lr(lr_trend, epoch = epoch+1, hyperparam = paras_for_graph)
-    
 
     if epoch == 25:
         print(epoch)
@@ -644,58 +567,7 @@ for epoch in range(start_epoch+1, start_epoch+25):
         plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
         plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
 
-    if epoch == 250:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions250.csv")
-        print("checking progress")
-        print(train_acc_trend)
-        print(train_loss_trend)
-        print(valid_acc_trend)
-        print(valid_loss_trend)
-        print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-
-    if epoch == 300:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions300.csv")
-        print("checking progress")
-        print(train_acc_trend)
-        print(train_loss_trend)
-        print(valid_acc_trend)
-        print(valid_loss_trend)
-        print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-    
-    if epoch == 350:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions350.csv")
-        print("checking progress")
-        print(train_acc_trend)
-        print(train_loss_trend)
-        print(valid_acc_trend)
-        print(valid_loss_trend)
-        print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-
-    if epoch == 400:
-        predictions = generate_predictions(net, testloader)
-        save_predictions_to_csv(predictions, list(range(len(predictions))), csv_filename="predictions400.csv")
-        print("checking progress")
-        print(train_acc_trend)
-        print(train_loss_trend)
-        print(valid_acc_trend)
-        print(valid_loss_trend)
-        print("over")
-        plot_losses(train_loss_trend, valid_loss_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_acc(train_acc_trend, valid_acc_trend, epoch = epoch, hyperparam = paras_for_graph)
-        plot_lr(lr_trend, epoch = epoch, hyperparam = paras_for_graph)
-
+# For analyzing where things could start to overfit
 print(good_epochs)
 
 
