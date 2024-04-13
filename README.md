@@ -20,7 +20,23 @@ The best result (84.7% on Kaggle test) we have is using ResNet5M model with thes
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
-In addition, we retrained the above model with a validation set to produce proper visualizations in the report. It achied 79.7% on the Kaggle test and uses the following hyperparameters:
+The second best result (84.5) was achieved with ResNetWithDropout model with following hyperparameters:
+
+    total_train_size = 50000 
+    total_validation_size = 10000
+    train_batch_size = 128
+    epochs = 200
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), 
+                            lr=args.lr,
+                            lr=initial_lr,
+                       momentum=0.9, weight_decay=weight_decay_SGD)
+    scheduler= torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, 
+                                                 steps_per_epoch=len(trainloader))
+
+
+
+In addition, we retrained the above model with a validation set to produce proper visualizations in the report. It achied 79.7% on the Kaggle test and uses the following hyperparameters. The checkpoints can be reached here: https://drive.google.com/file/d/1wbhihNJfBIh9eSSvM8fm1bvOatX-UTfm/view?usp=sharing. 
 
     total_train_size = 45000 
     total_valid_size = 5000
