@@ -1,4 +1,7 @@
 import torch
+import os
+import argparse
+import pickle
 import numpy as np
 import torch.nn as nn
 import pandas as pd
@@ -11,13 +14,10 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
+from models import *
 from models.resnet import ResNet18, ResNet5M, ResNet5MWithDropout, ResNet2_Modified, ResNet5M2Layers, ResNet34, ResNet50
 import matplotlib.pyplot as plt
 from customTensorDataset import CustomTensorDataset, get_transform, test_unpickle
-import os
-import argparse
-import pickle
-from models import *
 from utils import progress_bar, plot_losses, plot_acc, get_lrs, plot_lr
 
 # Parser 
@@ -52,10 +52,8 @@ for i in range(1, 6):
     all_labels.append(batch_labels)
     train_images_tensor = torch.Tensor(np.concatenate(all_images, axis=0)).to(device)
     train_labels_tensor = torch.Tensor(np.concatenate(all_labels, axis=0)).to(torch.long).to(device)
-print("all_images", len(all_images))
-print("all_labels", len(all_labels))
-print("train_images_tensor", len(train_images_tensor ))
-print("train_labels_tensor", len(train_labels_tensor))
+
+
 # Getting test data here: 
 all_test_images = []
 all_test_labels = []
@@ -68,10 +66,7 @@ test_images_tensor = torch.Tensor(np.concatenate(all_test_images, axis=0)).to(de
 test_labels_tensor = torch.Tensor(np.concatenate(all_test_labels, axis=0)).to(torch.long).to(device)
 train_dataset = TensorDataset(train_images_tensor, train_labels_tensor)
 X_train, X_valid, y_train, y_valid = train_test_split(train_images_tensor, train_labels_tensor, test_size=0.1, random_state=42)
-print("all test images", len(all_test_images))
-print("all test labels", len(all_test_labels))
-print("test image tensor", len(test_images_tensor))
-print("test images tensor", len(test_labels_tensor))
+
 # Training dataset
 train_dataset = CustomTensorDataset(tensors=(X_train, y_train), transform=get_transform("train"))
 valid_dataset = CustomTensorDataset(tensors=(X_valid, y_valid), transform=get_transform("valid"))
@@ -80,6 +75,7 @@ train_dataset = CustomTensorDataset(tensors=(train_images_tensor, train_labels_t
 trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 print("train loader length: ", len(trainloader))
+
 # Testing dataset
 test_dataset = CustomTensorDataset(tensors=(test_images_tensor, test_labels_tensor), transform = get_transform("test"))
 batch_size =  100
@@ -90,14 +86,12 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Models
 # print('==> Building model..')      
-# net = ResNet5M()
+net = ResNet5M()
 # net = ResNet34()
 # net = ResNet5MWithDropout()
-net = ResNet5M2Layers()
-## mimicing the idea from the Kaggle repo 
+# net = ResNet5M2Layers()
 # net = ResNet2_Modified(in_channels=3, num_classes=10) 
 # net = ResNet34()
-# ResNet5M2Layers, ResNet34
 
 net = net.to(device)
 if device == 'cuda':
