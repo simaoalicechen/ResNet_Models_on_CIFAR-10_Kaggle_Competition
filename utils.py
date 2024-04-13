@@ -123,7 +123,7 @@ def format_time(seconds):
         f = '0ms'
     return f
 
-
+# function to plot training and validation losses
 def plot_losses(train_losses, valid_losses, epoch, hyperparam):
     plt.figure(figsize=(10, 5))
     plt.plot(train_losses, label='Train Loss', color='blue')
@@ -136,6 +136,7 @@ def plot_losses(train_losses, valid_losses, epoch, hyperparam):
     plt.savefig(f"losses {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
 
+# function to plot training and validation accuracies 
 def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.figure(figsize=(10, 5))
     plt.plot(train_acc, label='Train Accuracy', color='green')
@@ -148,10 +149,12 @@ def plot_acc(train_acc, valid_acc, epoch, hyperparam):
     plt.savefig(f"acc {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
 
+# function to get learning rates
 def get_lrs(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
-
+        
+# function to plot learning rates
 def plot_lr(lr_trend, epoch, hyperparam):
     plt.figure(figsize=(10, 5))
     plt.plot(lr_trend, '-o', label='Learning Rate')
@@ -162,6 +165,3 @@ def plot_lr(lr_trend, epoch, hyperparam):
     plt.grid(True)
     plt.savefig(f"LR {' | '.join(hyperparam)} in {epoch} epochs.png")
     plt.close()
-
-
-

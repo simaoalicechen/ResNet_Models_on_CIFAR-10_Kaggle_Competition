@@ -1,4 +1,8 @@
-#Code from here: https://stackoverflow.com/questions/55588201/pytorch-transforms-on-tensordataset
+"""
+
+Code from here: https://stackoverflow.com/questions/55588201/pytorch-transforms-on-tensordataset
+
+"""
 
 import numpy as np
 import torch
@@ -9,6 +13,7 @@ import torchvision.transforms as transforms
 
 import matplotlib.pyplot as plt
 
+# create special obeject to make sure the tensors can be transformed later
 class CustomTensorDataset(Dataset):
 
     def __init__(self, tensors, transform=None):
@@ -64,6 +69,7 @@ def get_transform(split):
     else:
         print("error, wrong split")
 
+# function to get the pickle file
 def test_unpickle(file):
     import pickle
     with open(file, 'rb') as fo:

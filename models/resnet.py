@@ -1,3 +1,11 @@
+"""
+The ResNet5M, ResNet5MWithDropout, and ResNet5M2Layers are based on the codes from the cited github repo. We only modified the parameter numbers to keep them under 5 millions.
+
+The ResNet2_Modified and Conv_block combined together would generate a 2 layer ResNet that also has under 5M paramters. The design idea was inspired from this Kaggle repo: https://www.kaggle.com/code/kmldas/cifar10-resnet-90-accuracy-less-than-5-min
+
+In terms of Kaggle competition results, ResNet5M has the highest accuracy 84.7%, ResNet5MWithDropout has 84.5%, and ResNet2_Modified and ResNet2Layers have around 80%.
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -233,7 +241,6 @@ TODO
 
 Choose any of the architechture you want, the mimiced Kaggle one should be directly called from main.py
 We have 3 modified architecture here. 
-
 """
 
 def ResNet5M():
@@ -244,10 +251,6 @@ def ResNet5MWithDropout():
 
 def ResNet5M2Layers():
     return ResNet2(BasicBlock, [1, 1])
-
-# Not defined here. 
-# def ResNetSimple():
-#     return ResNetSimple(SimpleBlock)
 
 def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
@@ -272,5 +275,3 @@ def test():
     net = ResNet18()
     y = net(torch.randn(1, 3, 32, 32))
     print(y.size())
-
-# test()
